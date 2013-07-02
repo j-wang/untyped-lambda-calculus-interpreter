@@ -52,21 +52,6 @@ class Parser(object):
 
         return result
 
-    # def scope(self, tokens, acc=[]):
-    #     if tokens == []:
-    #         return acc
-    #     else:
-    #         current = tokens[0]
-    #         if current == '(':
-    #             next_paren = tokens.index(')')
-    #             acc.append(self.scope(tokens[1: next_paren]))
-    #             return self.scope(tokens[next_paren + 1:], acc)
-    #         elif current == ')':
-    #             return acc
-    #         else:
-    #             acc.append(current)
-    #             return self.scope(tokens[1:], acc)
-
     def scope(self, tokens):
         result = []
         skip_if_less = None
