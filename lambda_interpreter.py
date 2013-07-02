@@ -10,33 +10,91 @@ import re
 
 class Lexer(object):
 
-    def chunk_word(self, xs):
-        return self.chunk(xs, ' ', "", lambda x, y: x + y)
+    def tokenize(self, string):
+        """Tokenizes lambda calculus expressions. Takes string (an expression)
+        and returns a list of tokens.
 
-    def chunk_block(self, xs):
-        return self.chunk(xs, ')', [], lambda x, y: x.append(y),
-                          lambda x: re.match(r"[a-z]|[A-Z]", x),
-                          lambda ys: self.chunk_word(ys))
+        """
+        result = []
+        temp = ''
 
-    def chunk(self, xs, delim, acc, op, cond=lambda x: False, handle=None):
-        first = xs[0]
-        if first == delim:
-            return (xs[1:], acc)
-        elif cond(first):
-            return handle(xs)
-        else:
-            return self.chunk(xs[1:], delim, op(acc, first), op, cond, handle)
+        # nested if-else pains me, but dictionary with anonymous function is
+        # just as messy and slower
+        for char in string:
+            if char in ['(', ')', '.', ' ']:
+                if temp != '':
+                    result.append(temp)
+                    temp = ''
+                if char != ' ':
+                    result.append(char)
+            else:
+                temp = temp + char
 
-    def lex(self, exp):
-        lexing = exp
-        lexed = []
-        while lexing != []:
-            print lexing
-            element = lexing[0]
-            chunker = self.chunk_block if element == '(' else self.chunk_word
-            remaining, found_chunk = chunker(lexing)
-            lexing = remaining
-            lexed.append(found_chunk)
+        if temp != '':
+            result.append(temp)
+
+        return result
+
+
+class Parser(object):
+
+    def parse(self, tokens):
+        result = []
+        scope = []
+        temp = []
+
+        for token in tokens:
+            if token == '(':
+                pass
+            if token == ')':
+                scope.append(temp)
+                temp = []
+
+        return result
+
+    # def scope(self, tokens, acc=[]):
+    #     if tokens == []:
+    #         return acc
+    #     else:
+    #         current = tokens[0]
+    #         if current == '(':
+    #             next_paren = tokens.index(')')
+    #             acc.append(self.scope(tokens[1: next_paren]))
+    #             return self.scope(tokens[next_paren + 1:], acc)
+    #         elif current == ')':
+    #             return acc
+    #         else:
+    #             acc.append(current)
+    #             return self.scope(tokens[1:], acc)
+
+    def scope(self, tokens):
+        result = []
+        skip_if_less = None
+        for index in range(len(tokens)):
+            if skip_if_less and index < skip_if_less:
+                continue
+            else:
+                current = tokens[index]
+                if current == '(':
+                    next_paren = tokens.index(')')
+                    result.append(self.scope(tokens[index + 1: next_paren]))
+                    skip_if_less = next_paren + 1
+                else:
+                    result.append(current)
+        return result
+
+    def match_parens(self, tokens):
+        total = 0
+        for token in tokens:
+            if token == '(':
+                total += 1
+            elif token == ')':
+                total -= 1
+
+            if total < 0:
+                return False
+
+        return total == 0
 
 
 # Dictionary of regexes is probably the more promising path
@@ -53,6 +111,10 @@ class BetterLexer(object):
         pass
 
     def lex_word(self, xs):
+        pass
+
+    def lex(self, xs):
+        # recusively process blocks, appending as you go, then blocks
         pass
 
 
