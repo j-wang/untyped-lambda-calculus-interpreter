@@ -34,14 +34,14 @@ class TestLexer(unittest.TestCase):
         self.assertEqual(self.lexer.tokenize('(lambda x. x)'),
                          ['(', 'lambda', 'x', '.', 'x', ')'])
 
-    def test_match_paren1(self):
-        self.assertEqual(self.parser.match_parens('((testing) 1 2 3)'), True)
+    def test_matched_paren1(self):
+        self.assertEqual(self.parser.matched_parens('((testing) 1 2 3)'), True)
 
-    def test_match_paren2(self):
-        self.assertEqual(self.parser.match_parens(')('), False)
+    def test_matched_paren2(self):
+        self.assertEqual(self.parser.matched_parens(')('), False)
 
-    def test_match_paren3(self):
-        self.assertEqual(self.parser.match_parens('()('), False)
+    def test_matched_paren3(self):
+        self.assertEqual(self.parser.matched_parens('()('), False)
 
     def test_scope1(self):
         self.assertEqual(self.parser.scope(self.application_tokens),
@@ -57,24 +57,27 @@ class TestLexer(unittest.TestCase):
         self.assertEqual(self.parser.scope(newTokens),
                          [['lambda', 'x', '.', 'x', 'y'], 't'])
 
-    # def test_parse1(self):
-    #     self.assertEqual(self.parser.parse(self.id_tokens),
-    #                      {'type': 'lambda', 'binder': 'x', 'term': 'x'})
+    def test_parse1(self):
+        self.assertEqual(self.parser.full_parse(self.id_tokens),
+                         {'type': 'lambda', 'binder': 'x',
+                          'term': {'type': 'variable', 'value': 'x'}})
 
-    # def test_parse2(self):
-    #     self.assertEqual(self.parser.parse(self.bound_and_free),
-    #                      {'type': 'application',
-    #                       'left': {'type': 'lambda', 'binder': 'x',
-    #                                'term': 'x'},
-    #                       'right': {'type': 'variable', 'value': 'y'}})
+    def test_parse2(self):
+        self.assertEqual(self.parser.full_parse(self.bound_and_free),
+                         {'type': 'application',
+                          'left': {'type': 'lambda', 'binder': 'x',
+                                   'term': {'type': 'variable',
+                                            'value': 'x'}},
+                          'right': {'type': 'variable', 'value': 'y'}})
 
-    # def test_parse3(self):
-    #     self.assertEqual(self.parser.parse(self.application_tokens),
-    #                      {'type': 'application',
-    #                       'left':
-    #                          {'type': 'lambda', 'binder': 'x', 'term': 'x'},
-    #                       'right':
-    #                          {'type': 'variable', 'value': 't'}})
+    def test_parse3(self):
+        self.assertEqual(self.parser.full_parse(self.application_tokens),
+                         {'type': 'application',
+                          'left':
+                             {'type': 'lambda', 'binder': 'x',
+                              'term': {'type': 'variable', 'value': 'x'}},
+                          'right':
+                             {'type': 'variable', 'value': 't'}})
 
 
 if __name__ == '__main__':
