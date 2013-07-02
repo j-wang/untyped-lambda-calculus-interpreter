@@ -45,11 +45,17 @@ class TestLexer(unittest.TestCase):
 
     def test_scope1(self):
         self.assertEqual(self.parser.scope(self.application_tokens),
-                         [['lambda', 'x', '.', 'x', 'y'], 't'])
+                         [['lambda', 'x', '.', 'x'], 't'])
 
     def test_scope2(self):
         self.assertEqual(self.parser.scope(self.id_tokens),
                          [['lambda', 'x', '.', 'x']])
+
+    def test_scope3(self):
+        newTokens = copy.copy(self.bound_and_free)
+        newTokens.append('t')
+        self.assertEqual(self.parser.scope(newTokens),
+                         [['lambda', 'x', '.', 'x', 'y'], 't'])
 
     # def test_parse1(self):
     #     self.assertEqual(self.parser.parse(self.id_tokens),
