@@ -146,27 +146,6 @@ class Parser(object):
         return total == 0
 
 
-# Dictionary of regexes is probably the more promising path
-class BetterLexer(object):
-    """Tokenizes lambda calculus expressions. Takes string (an expression) and
-    returns a list of tokens (words or lists of words, based on context).
-
-    """
-    def __init__(self):
-        self.case = {re.compile('(?P<block>[\w|\s]+)'): self.lex_block,
-                     re.compile('[a-z]|[A-Z]+'): self.lex_word}
-
-    def lex_block(self, xs):
-        pass
-
-    def lex_word(self, xs):
-        pass
-
-    def lex(self, xs):
-        # recusively process blocks, appending as you go, then blocks
-        pass
-
-
 def reduction(ast):
     ## reduce AST / evaluate
     pass
