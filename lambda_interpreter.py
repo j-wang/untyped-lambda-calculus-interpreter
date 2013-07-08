@@ -9,10 +9,15 @@
 
 """
 
-import re
-
 
 class Lexer(object):
+    """
+    .. class:: Lexer
+
+    Holds the :meth:`Lexer.tokenize` method, which breaks a lambda expression
+    (given as a string) into tokens.
+
+    """
 
     def tokenize(self, string):
         """
@@ -42,6 +47,15 @@ class Lexer(object):
 
 
 class Parser(object):
+    """
+    .. class:: Parser
+
+    Contains a variety of methods for parsing a list of tokens into more
+    semantically useful pieces. :meth:`Parser.full_parse` fully parses tokens
+    into semantically meaningful pieces (incorporating functionality of other
+    functions in this class).
+
+    """
 
     def full_parse(self, tokens):
         """
@@ -146,11 +160,24 @@ class Parser(object):
         return total == 0
 
 
-def reduction(ast):
-    ## reduce AST / evaluate
-    pass
+class Evaluator(object):
+    """
+    .. class:: Evaluator
+
+    Takes a dictionary of dictionaries with semantically meaningful lambda
+    expression components (processed by :class:`Parser`) and evaluates the
+    expression into its most reduced form.
+
+    """
+
+    def eval(self, exp):
+        pass
 
 
 def main():
     ## loop read eval print
     pass
+
+
+if __name__ == '__main__':
+    main()
