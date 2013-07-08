@@ -101,10 +101,10 @@ class Parser(object):
                 if end_binding != 2:
                     raise ValueError("Each lambda takes exactly one arg.")
                 term['binder'] = tokens[1]
-                term['term'] = []
+                term['body'] = []
                 for t in tokens[3:]:
-                    term['term'].append(self.parse(t))
-                if len(term['term']) == 0:
+                    term['body'].append(self.parse(t))
+                if len(term['body']) == 0:
                     raise ValueError("Lambda-abstraction must have terms.")
                 return term
 
@@ -198,7 +198,7 @@ class Evaluator(object):
         elif typ == 'lambda':
             return {'type': 'lambda',
                     'binder': exp['binder'],
-                    'term': self.raw_eval(exp['term'])}
+                    'body': self.raw_eval(exp['body'])}
         # elif typ == 'variable'  # needed to allow eval of variables
         else:
             raise ValueError("Unknown type ({0}) passed!".format(typ))
@@ -208,7 +208,7 @@ class Evaluator(object):
         if right['type'] != 'variable':
             return {'type': 'application', 'left': left, 'right': right}
         else:
-            # find the binder in the term and replace it with the variable
+            # find the binder in the body and replace it with the variable
             pass
 
     def _pretty_print(self, exp):
