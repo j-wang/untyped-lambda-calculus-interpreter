@@ -8,6 +8,7 @@
 .. moduleauthor:: James Wang <james@j-wang.net>
 
 """
+import sys
 
 
 class Lexer(object):
@@ -59,7 +60,7 @@ class Parser(object):
 
     def full_parse(self, tokens):
         """
-        .. method:: full_parse([tokens])
+        .. method:: full_parse(tokens)
 
         Takes lexed (:meth:`Lexer.tokenize`) tokens and turns them into
         semantically meaningful language constructs, represented as
@@ -72,7 +73,7 @@ class Parser(object):
 
     def parse(self, tokens):
         """
-        .. method:: parse([tokens])
+        .. method:: parse(tokens)
 
         Takes lexed (:meth:`Lexer.tokenize`) and scoped (:meth:`Parser.scope`)
         tokens and turns them into semantically meaningful language constructs,
@@ -115,7 +116,7 @@ class Parser(object):
 
     def scope(self, tokens):
         """
-        .. method:: scope([tokens])
+        .. method:: scope(tokens)
 
         Takes lexed tokens (from :meth:`Lexer.tokenize`) and creates nested
         scopes based on parentheses.
@@ -138,7 +139,7 @@ class Parser(object):
 
     def matched_parens(self, tokens):
         """
-        .. method:: matched_parens([tokens])
+        .. method:: matched_parens(tokens)
 
         Takes lexed tokens (from :meth:`Lexer.tokenize` Returns true is all
         parenthesis are properly matched. Otherwise, returns false.
@@ -171,13 +172,56 @@ class Evaluator(object):
     """
 
     def eval(self, exp):
+        """
+        .. method:: eval(exp)
+
+        Takes dictionary of dictionaries representing lambda
+        expression. Reduces the expression to its most reduced form using
+        'call-by-value.' Returns the reduced form of the dictionary as a
+        pretty-print formatted string.
+
+        """
+        return self._pretty_print(self.raw_eval(exp))
+
+    def raw_eval(self, exp):
+        """
+        .. method raw_eval(exp)
+
+        Same as eval, but returns reduced dictionary of dictionaries instead of
+        pretty-print formatted string of the expression.
+
+        """
+        pass
+
+    def _pretty_print(self, exp):
+        # Helper function for printing out the contents of eval in a pretty,
+        # human-pleasing format.
         pass
 
 
 def main():
-    ## loop read eval print
-    pass
+    ## Read, Eval, Print Loop (REPL)
+    user_input = ""
+    lex = Lexer()
+    par = Parser()
+    eva = Evaluator()
+    l = lex.tokenize
+    p = par.full_parse
+    e = eva.eval
 
+    while True:
+        try:
+            user_input = raw_input(">> ")
+            if user_input == 'q':
+                break
+            else:
+                print(e(p(l(user_input))))
+        except ValueError as err:
+            print("Invalid expression: {0}".format(err.message))
+        except:
+            print("Unexpected error: {0}".format(sys.exc_info()[0]))
+
+    print("Goodbye!")
 
 if __name__ == '__main__':
     main()
