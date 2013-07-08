@@ -60,22 +60,21 @@ class TestLexer(unittest.TestCase):
     def test_parse1(self):
         self.assertEqual(self.parser.full_parse(self.id_tokens),
                          {'type': 'lambda', 'binder': 'x',
-                          'term': {'type': 'variable', 'value': 'x'}})
+                          'term': [{'type': 'variable', 'value': 'x'}]})
 
     def test_parse2(self):
+        print self.parser.full_parse(self.bound_and_free)
         self.assertEqual(self.parser.full_parse(self.bound_and_free),
-                         {'type': 'application',
-                          'left': {'type': 'lambda', 'binder': 'x',
-                                   'term': {'type': 'variable',
-                                            'value': 'x'}},
-                          'right': {'type': 'variable', 'value': 'y'}})
+                         {'type': 'lambda', 'binder': 'x',
+                          'term': [{'type': 'variable', 'value': 'x'},
+                                   {'type': 'variable', 'value': 'y'}]})
 
     def test_parse3(self):
         self.assertEqual(self.parser.full_parse(self.application_tokens),
                          {'type': 'application',
                           'left':
                              {'type': 'lambda', 'binder': 'x',
-                              'term': {'type': 'variable', 'value': 'x'}},
+                              'term': [{'type': 'variable', 'value': 'x'}]},
                           'right':
                              {'type': 'variable', 'value': 't'}})
 

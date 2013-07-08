@@ -85,7 +85,7 @@ class Parser(object):
             term['type'] = 'variable'
             term['value'] = tokens
             return term
-        else:
+        else:  # block could use some refactoring
             current = tokens[0]
             if current != 'lambda':
                 term['type'] = 'application'
@@ -96,22 +96,16 @@ class Parser(object):
                     return term['left']
                 return term
             else:
-                term['type'] = 'application'
-                subterm = {}
-                subterm['type'] = 'lambda'
+                term['type'] = 'lambda'
                 end_binding = tokens.index('.')
                 if end_binding != 2:
                     raise ValueError("Each lambda takes exactly one arg.")
-                subterm['binder'] = tokens[1]
-                try:
-                    subterm['term'] = self.parse(tokens[3])
-                except IndexError:
+                term['binder'] = tokens[1]
+                term['term'] = []
+                for t in tokens[3:]:
+                    term['term'].append(self.parse(t))
+                if len(term['term']) == 0:
                     raise ValueError("Lambda-abstraction must have terms.")
-                term['left'] = subterm
-                try:
-                    term['right'] = self.parse(tokens[4:])
-                except IndexError:
-                    return subterm
                 return term
 
     def scope(self, tokens):
@@ -191,7 +185,31 @@ class Evaluator(object):
         pretty-print formatted string of the expression.
 
         """
-        pass
+        typ = exp['type']
+        if typ == 'application':
+            left = self.raw_eval(exp['left'])
+            right = self.raw_eval(exp['right'])
+            if left['type'] == 'lambda':
+                return self._apply(left, right)
+            else:
+                return {'type': 'application',
+                        'left': left,
+                        'right': right}
+        elif typ == 'lambda':
+            return {'type': 'lambda',
+                    'binder': exp['binder'],
+                    'term': self.raw_eval(exp['term'])}
+        # elif typ == 'variable'  # needed to allow eval of variables
+        else:
+            raise ValueError("Unknown type ({0}) passed!".format(typ))
+
+    def _apply(self, left, right):
+        # Takes a lambda expression on left and applies to right.
+        if right['type'] != 'variable':
+            return {'type': 'application', 'left': left, 'right': right}
+        else:
+            # find the binder in the term and replace it with the variable
+            pass
 
     def _pretty_print(self, exp):
         # Helper function for printing out the contents of eval in a pretty,
