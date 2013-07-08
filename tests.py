@@ -21,6 +21,9 @@ class TestLexer(unittest.TestCase):
         self.application_tokens.append('t')
         self.lexer = lamint.Lexer()
         self.parser = lamint.Parser()
+        self.eval = lamint.Evaluator()
+        semantic = lambda x: self.parser.full_parse(self.lexer.tokenize(x))
+        self.semantic = semantic
 
     def test_tokenize1(self):
         self.assertEqual(self.lexer.tokenize('(bob) bill'),
@@ -52,8 +55,7 @@ class TestLexer(unittest.TestCase):
                          [['lambda', 'x', '.', 'x']])
 
     def test_scope3(self):
-        newTokens = copy.copy(self.bound_and_free)
-        newTokens.append('t')
+        newTokens = ['(', 'lambda', 'x', '.', 'x', 'y', ')', 't']
         self.assertEqual(self.parser.scope(newTokens),
                          [['lambda', 'x', '.', 'x', 'y'], 't'])
 
@@ -63,7 +65,6 @@ class TestLexer(unittest.TestCase):
                           'body': [{'type': 'variable', 'value': 'x'}]})
 
     def test_parse2(self):
-        print self.parser.full_parse(self.bound_and_free)
         self.assertEqual(self.parser.full_parse(self.bound_and_free),
                          {'type': 'lambda', 'binder': 'x',
                           'body': [{'type': 'variable', 'value': 'x'},
@@ -78,6 +79,28 @@ class TestLexer(unittest.TestCase):
                           'right':
                              {'type': 'variable', 'value': 't'}})
 
+    def test_parse_list_of_variables(self):
+        self.assertEqual(self.parser.full_parse(self.lexer.tokenize("x y z")),
+                         {'type': 'application',
+                          'left': {'type': 'variable', 'value': 'x'},
+                          'right': {'type': 'application',
+                                    'left': {'type': 'variable',
+                                             'value': 'y'},
+                                    'right': {'type': 'variable',
+                                              'value': 'z'}}})
+
+    def test_raw_eval1(self):
+        parsed = self.parser.full_parse(self.application_tokens)
+        self.assertEqual(self.eval.raw_eval(parsed),
+                         {'type': 'variable', 'value': 't'})
+
+    def test_raw_eval2(self):
+        newTokens = ['(', 'lambda', 'x', '.', 'x', 'y', ')', 't']
+        parsed = self.parser.full_parse(newTokens)
+        self.assertEqual(self.eval.raw_eval(parsed),
+                         {'type': 'application',
+                          'left': {'type': 'variable', 'value': 't'},
+                          'right': {'type': 'variable', 'value': 'y'}})
 
 if __name__ == '__main__':
     unittest.main()

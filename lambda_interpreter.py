@@ -186,7 +186,9 @@ class Evaluator(object):
 
         """
         typ = exp['type']
-        if typ == 'application':
+        if typ == 'variable':
+            return exp
+        elif typ == 'application':
             left = self.raw_eval(exp['left'])
             right = self.raw_eval(exp['right'])
             if left['type'] == 'lambda':
@@ -196,10 +198,12 @@ class Evaluator(object):
                         'left': left,
                         'right': right}
         elif typ == 'lambda':
+            evaluated_body = []
+            for term in exp['body']:
+                evaluated_body.append(self.raw_eval(term))
             return {'type': 'lambda',
                     'binder': exp['binder'],
-                    'body': self.raw_eval(exp['body'])}
-        # elif typ == 'variable'  # needed to allow eval of variables
+                    'body': evaluated_body}
         else:
             raise ValueError("Unknown type ({0}) passed!".format(typ))
 
@@ -208,8 +212,16 @@ class Evaluator(object):
         if right['type'] != 'variable':
             return {'type': 'application', 'left': left, 'right': right}
         else:
-            # find the binder in the body and replace it with the variable
-            pass
+            binder = left['binder']
+            applied_value = right['value']
+            result = []
+            parser = Parser()
+            for term in left['body']:
+                if term['type'] == 'variable' and term['value'] == binder:
+                    result.append(applied_value)
+                else:
+                    result.append(term['value'])
+            return parser.full_parse(result)
 
     def _pretty_print(self, exp):
         # Helper function for printing out the contents of eval in a pretty,
