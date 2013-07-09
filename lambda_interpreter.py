@@ -182,11 +182,11 @@ class Evaluator(object):
         pretty-print formatted string.
 
         """
-        to_print = self._pretty_print(self.raw_eval(exp))
-        if to_print[0] == '(' and to_print[-1] == ')':
-            return to_print[1:-1]  # doesn't work right for nested exp
+        to_p = self._pretty_print(self.raw_eval(exp))
+        if to_p[0] == '(' and to_p[-1] == ')' and self._matched_parens(to_p):
+            return to_p[1:-1]
         else:
-            return to_print
+            return to_p
 
     def raw_eval(self, exp):
         """
@@ -220,19 +220,19 @@ class Evaluator(object):
 
     def _apply(self, left, right):
         # Takes a lambda expression on left and applies to right.
-        if right['type'] != 'variable':
-            return {'type': 'application', 'left': left, 'right': right}
-        else:
-            binder = left['binder']
-            applied_value = right['value']
-            result = []
-            parser = Parser()
-            for term in left['body']:
-                if term['type'] == 'variable' and term['value'] == binder:
-                    result.append(applied_value)
-                else:
-                    result.append(term['value'])
-            return parser.full_parse(result)
+        binder = left['binder']
+        applied_term = right
+        result = []
+        for term in left['body']:
+            if term['type'] == 'variable' and term['value'] == binder:
+                result.append(applied_term)
+            else:
+                result.append(term)
+        result.reverse()  # because Python's reduce is foldr
+        apply_fold = lambda acc, x: {'type': 'application',
+                                     'left': x,
+                                     'right': acc}
+        return reduce(apply_fold, result)
 
     def _pretty_print(self, exp):
         # Helper function for printing out the contents of eval in a pretty,
@@ -253,6 +253,19 @@ class Evaluator(object):
         else:
             raise ValueError("Attempted to print unknown type.")
 
+    def _matched_parens(self, string):
+        # Matched parens, this time for a string
+        parens = [letter for letter in string if letter in ['(', ')']]
+        incr = 0
+        for paren in parens:
+            if paren == '(':
+                incr += 1
+            else:
+                incr -= 1
+            if incr < 0:
+                return False
+        return incr == 0
+
 
 def main():
     ## Read, Eval, Print Loop (REPL)
@@ -266,9 +279,11 @@ def main():
 
     while True:
         try:
-            user_input = raw_input("lambda (q to quit) >> ")
+            user_input = raw_input("LCI (q to quit) >> ")
             if user_input == 'q':
                 break
+            elif user_input == '':
+                continue
             else:
                 print(e(p(l(user_input))))
         except ValueError as err:

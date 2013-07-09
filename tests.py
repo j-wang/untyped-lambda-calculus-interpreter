@@ -144,13 +144,14 @@ class TestLexer(unittest.TestCase):
     def test_raw_eval_nested(self):
         string = "(lambda x. x) ((lambda x. x) (lambda z. (lambda x. x) x))"
         parsed = self.semantic(string)
+        print self.eval.eval(parsed)
         self.assertEqual(self.eval.raw_eval(parsed),
                          {'type': 'lambda',
                           'binder': 'z',
                           'body': [{'type': 'lambda',
                                     'binder': 'x',
-                                    'body': {'type': 'variable',
-                                             'value': 'x'}},
+                                    'body': [{'type': 'variable',
+                                              'value': 'x'}]},
                                    {'type': 'variable',
                                     'value': 'x'}]})
 
