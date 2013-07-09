@@ -125,7 +125,14 @@ class Parser(object):
                 current = tokens[index]
                 if current == '(':
                     next_paren = tokens[index:].index(')') + index
-                    result.append(self.scope(tokens[index + 1: next_paren]))
+                    inner = tokens[index + 1: next_paren]
+                    while inner.count('(') != inner.count(')'):
+                        # print "Next Par: " + str(tokens[next_paren + 1])
+                        next_paren = (tokens[next_paren + 1:].index(')') +
+                                      next_paren + 1)  # search next ')'
+                        inner = tokens[index + 1: next_paren]
+                        # print "Inner : " + str(inner)
+                    result.append(self.scope(inner))
                     skip_if_less = next_paren + 1
                 else:
                     result.append(current)
@@ -175,7 +182,11 @@ class Evaluator(object):
         pretty-print formatted string.
 
         """
-        return self._pretty_print(self.raw_eval(exp))
+        to_print = self._pretty_print(self.raw_eval(exp))
+        if to_print[0] == '(' and to_print[-1] == ')':
+            return to_print[1:-1]  # doesn't work right for nested exp
+        else:
+            return to_print
 
     def raw_eval(self, exp):
         """
@@ -226,7 +237,21 @@ class Evaluator(object):
     def _pretty_print(self, exp):
         # Helper function for printing out the contents of eval in a pretty,
         # human-pleasing format.
-        pass
+        if type(exp) is list:
+            result = []
+            for term in exp:
+                result.append(self._pretty_print(term))
+            return ' '.join(result)
+        elif exp['type'] == 'variable':
+            return exp['value']
+        elif exp['type'] == 'application':
+            return (self._pretty_print(exp['left']) + " " +
+                    self._pretty_print(exp['right']))
+        elif exp['type'] == 'lambda':
+            return ("(" + "lambda " + exp['binder'] + ". " +
+                    self._pretty_print(exp['body']) + ")")
+        else:
+            raise ValueError("Attempted to print unknown type.")
 
 
 def main():
@@ -241,7 +266,7 @@ def main():
 
     while True:
         try:
-            user_input = raw_input(">> ")
+            user_input = raw_input("lambda (q to quit) >> ")
             if user_input == 'q':
                 break
             else:

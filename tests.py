@@ -37,6 +37,14 @@ class TestLexer(unittest.TestCase):
         self.assertEqual(self.lexer.tokenize('(lambda x. x)'),
                          ['(', 'lambda', 'x', '.', 'x', ')'])
 
+    def test_nested_tokenize(self):
+        string = "(lambda x. x) ((lambda x. x) (lambda z. (lambda x. x) x))"
+        self.assertEqual(self.lexer.tokenize(string),
+                         ['(', 'lambda', 'x', '.', 'x', ')', '(', '(',
+                          'lambda', 'x', '.', 'x', ')', '(', 'lambda', 'z',
+                          '.', '(', 'lambda', 'x', '.', 'x', ')', 'x', ')',
+                          ')'])
+
     def test_matched_paren1(self):
         self.assertEqual(self.parser.matched_parens('((testing) 1 2 3)'), True)
 
@@ -58,6 +66,15 @@ class TestLexer(unittest.TestCase):
         newTokens = ['(', 'lambda', 'x', '.', 'x', 'y', ')', 't']
         self.assertEqual(self.parser.scope(newTokens),
                          [['lambda', 'x', '.', 'x', 'y'], 't'])
+
+    def test_nested_scope(self):
+        string = "(lambda x. x) ((lambda x. x) (lambda z. (lambda x. x) x))"
+        tokens = self.lexer.tokenize(string)
+        self.assertEqual(self.parser.scope(tokens),
+                         [['lambda', 'x', '.', 'x'],
+                          [['lambda', 'x', '.', 'x'], ['lambda', 'z', '.',
+                                                       ['lambda', 'x',
+                                                        '.', 'x'], 'x']]])
 
     def test_parse1(self):
         self.assertEqual(self.parser.full_parse(self.id_tokens),
@@ -89,6 +106,28 @@ class TestLexer(unittest.TestCase):
                                     'right': {'type': 'variable',
                                               'value': 'z'}}})
 
+    def test_nested_parse(self):
+        string = "(lambda x. x) ((lambda x. x) (lambda z. (lambda x. x) x))"
+        tokens = self.lexer.tokenize(string)
+        self.assertEqual(self.parser.full_parse(tokens),
+                         {'type': 'application',
+                          'left': {'type': 'lambda', 'binder': 'x',
+                                   'body': [{'type': 'variable',
+                                            'value': 'x'}]},
+                          'right': {'type': 'application',
+                                    'left': {'type': 'lambda',
+                                             'binder': 'x',
+                                             'body': [{'type': 'variable',
+                                                      'value': 'x'}]},
+                                    'right': {'type': 'lambda',
+                                              'binder': 'z',
+                                              'body': [{'type': 'lambda',
+                                                        'binder': 'x',
+                                                        'body': [{'type': 'variable',
+                                                                  'value': 'x'}]},
+                                                       {'type': 'variable',
+                                                        'value': 'x'}]}}})
+
     def test_raw_eval1(self):
         parsed = self.parser.full_parse(self.application_tokens)
         self.assertEqual(self.eval.raw_eval(parsed),
@@ -101,6 +140,36 @@ class TestLexer(unittest.TestCase):
                          {'type': 'application',
                           'left': {'type': 'variable', 'value': 't'},
                           'right': {'type': 'variable', 'value': 'y'}})
+
+    def test_raw_eval_nested(self):
+        string = "(lambda x. x) ((lambda x. x) (lambda z. (lambda x. x) x))"
+        parsed = self.semantic(string)
+        self.assertEqual(self.eval.raw_eval(parsed),
+                         {'type': 'lambda',
+                          'binder': 'z',
+                          'body': [{'type': 'lambda',
+                                    'binder': 'x',
+                                    'body': {'type': 'variable',
+                                             'value': 'x'}},
+                                   {'type': 'variable',
+                                    'value': 'x'}]})
+
+    def test_eval1(self):
+        parsed = self.parser.full_parse(self.application_tokens)
+        self.assertEqual(self.eval.eval(parsed), "t")
+
+    def test_eval2(self):
+        newTokens = ['(', 'lambda', 'x', '.', 'x', 'y', ')', 't']
+        parsed = self.parser.full_parse(newTokens)
+        self.assertEqual(self.eval.eval(parsed), "t y")
+
+    def test_eval3(self):
+        parsed = self.semantic("lambda x. x y")
+        self.assertEqual(self.eval.eval(parsed), "lambda x. x y")
+
+    def test_eval4(self):
+        parsed = self.semantic("(lambda x. x z y) t")
+        self.assertEqual(self.eval.eval(parsed), "t z y")
 
 if __name__ == '__main__':
     unittest.main()
