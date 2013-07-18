@@ -18,11 +18,13 @@ main = defaultMain Tests
 
 lexerSimpleTest :: HU.Test
 lexerSimpleTest =
-  "Simple test" HU.~: "(lambda x x)" HU.@=? [["lambda", "x", "x"]]
+    "Simple test" HU.~: "(lambda x x)" HU.@=? ["(", "lambda", "x", "x", ")"]
 
 lexerNestedTest :: HU.Test
 lexerNestedTest =
-  "Nested test" HU.~: "(lambda x (lambda x y))" HU.@=? [["lambda", "x", ["lambda", "x", "y"]]]
+    "Nested test" HU.~: "(lambda x (lambda x y))" HU.@=? ["(", "lambda", "x",
+                                                          "(", "lambda", "x",
+                                                          "y", ")", ")"]
 
 lexerEmptyTest :: String -> [String]
 
