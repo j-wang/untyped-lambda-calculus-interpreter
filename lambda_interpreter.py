@@ -19,10 +19,10 @@ class Lexer(object):
     (given as a string) into tokens.
 
     """
-
-    def tokenize(self, string):
+    @classmethod
+    def tokenize(cls, string):
         """
-        .. method:: tokenize(String)
+        .. classmethod:: tokenize(String)
 
         Tokenizes lambda calculus expressions. Takes string (an expression)
         and returns a list of tokens.
@@ -57,10 +57,10 @@ class Parser(object):
     functions in this class).
 
     """
-
-    def full_parse(self, tokens):
+    @classmethod
+    def full_parse(cls, tokens):
         """
-        .. method:: full_parse(tokens)
+        .. classmethod:: full_parse(tokens)
 
         Takes lexed (:meth:`Lexer.tokenize`) tokens and turns them into
         semantically meaningful language constructs, represented as
@@ -69,11 +69,12 @@ class Parser(object):
         The same as parse, except does not require scoping.
 
         """
-        return self.parse(self.scope(tokens))
+        return cls.parse(cls.scope(tokens))
 
-    def parse(self, tokens):
+    @classmethod
+    def parse(cls, tokens):
         """
-        .. method:: parse(tokens)
+        .. classmethod:: parse(tokens)
 
         Takes lexed (:meth:`Lexer.tokenize`) and scoped (:meth:`Parser.scope`)
         tokens and turns them into semantically meaningful language constructs,
@@ -89,9 +90,9 @@ class Parser(object):
             current = tokens[0]
             if current != 'lambda':
                 term['type'] = 'application'
-                term['left'] = self.parse(current)
+                term['left'] = cls.parse(current)
                 try:
-                    term['right'] = self.parse(tokens[1:])
+                    term['right'] = cls.parse(tokens[1:])
                 except IndexError:
                     return term['left']
                 return term
@@ -103,14 +104,15 @@ class Parser(object):
                 term['binder'] = tokens[1]
                 term['body'] = []
                 for t in tokens[3:]:
-                    term['body'].append(self.parse(t))
+                    term['body'].append(cls.parse(t))
                 if len(term['body']) == 0:
                     raise ValueError("Lambda-abstraction must have terms.")
                 return term
 
-    def scope(self, tokens):
+    @classmethod
+    def scope(cls, tokens):
         """
-        .. method:: scope(tokens)
+        .. classmethod:: scope(tokens)
 
         Takes lexed tokens (from :meth:`Lexer.tokenize`) and creates nested
         scopes based on parentheses.
@@ -127,20 +129,19 @@ class Parser(object):
                     next_paren = tokens[index:].index(')') + index
                     inner = tokens[index + 1: next_paren]
                     while inner.count('(') != inner.count(')'):
-                        # print "Next Par: " + str(tokens[next_paren + 1])
                         next_paren = (tokens[next_paren + 1:].index(')') +
                                       next_paren + 1)  # search next ')'
                         inner = tokens[index + 1: next_paren]
-                        # print "Inner : " + str(inner)
-                    result.append(self.scope(inner))
+                    result.append(cls.scope(inner))
                     skip_if_less = next_paren + 1
                 else:
                     result.append(current)
         return result
 
-    def matched_parens(self, tokens):
+    @classmethod
+    def matched_parens(cls, tokens):
         """
-        .. method:: matched_parens(tokens)
+        .. classmethod:: matched_parens(tokens)
 
         Takes lexed tokens (from :meth:`Lexer.tokenize` Returns true is all
         parenthesis are properly matched. Otherwise, returns false.
@@ -171,10 +172,10 @@ class Evaluator(object):
     expression into its most reduced form.
 
     """
-
-    def eval(self, exp):
+    @classmethod
+    def eval(cls, exp):
         """
-        .. method:: eval(exp)
+        .. classmethod:: eval(exp)
 
         Takes dictionary of dictionaries representing lambda
         expression. Reduces the expression to its most reduced form using
@@ -182,15 +183,16 @@ class Evaluator(object):
         pretty-print formatted string.
 
         """
-        to_p = self._pretty_print(self.raw_eval(exp))
-        if to_p[0] == '(' and to_p[-1] == ')' and self._matched_parens(to_p):
+        to_p = cls._pretty_print(cls.raw_eval(exp))
+        if to_p[0] == '(' and to_p[-1] == ')' and cls._matched_parens(to_p):
             return to_p[1:-1]
         else:
             return to_p
 
-    def raw_eval(self, exp):
+    @classmethod
+    def raw_eval(cls, exp):
         """
-        .. method raw_eval(exp)
+        .. classmethod raw_eval(exp)
 
         Same as eval, but returns reduced dictionary of dictionaries instead of
         pretty-print formatted string of the expression.
@@ -200,10 +202,10 @@ class Evaluator(object):
         if typ == 'variable':
             return exp
         elif typ == 'application':
-            left = self.raw_eval(exp['left'])
-            right = self.raw_eval(exp['right'])
+            left = cls.raw_eval(exp['left'])
+            right = cls.raw_eval(exp['right'])
             if left['type'] == 'lambda':
-                return self._apply(left, right)
+                return cls._apply(left, right)
             else:
                 return {'type': 'application',
                         'left': left,
@@ -211,14 +213,15 @@ class Evaluator(object):
         elif typ == 'lambda':
             evaluated_body = []
             for term in exp['body']:
-                evaluated_body.append(self.raw_eval(term))
+                evaluated_body.append(cls.raw_eval(term))
             return {'type': 'lambda',
                     'binder': exp['binder'],
                     'body': evaluated_body}
         else:
             raise ValueError("Unknown type ({0}) passed!".format(typ))
 
-    def _apply(self, left, right):
+    @classmethod
+    def _apply(cls, left, right):
         # Takes a lambda expression on left and applies to right.
         binder = left['binder']
         applied_term = right
@@ -234,26 +237,28 @@ class Evaluator(object):
                                      'right': acc}
         return reduce(apply_fold, result)
 
-    def _pretty_print(self, exp):
+    @classmethod
+    def _pretty_print(cls, exp):
         # Helper function for printing out the contents of eval in a pretty,
         # human-pleasing format.
         if type(exp) is list:
             result = []
             for term in exp:
-                result.append(self._pretty_print(term))
+                result.append(cls._pretty_print(term))
             return ' '.join(result)
         elif exp['type'] == 'variable':
             return exp['value']
         elif exp['type'] == 'application':
-            return (self._pretty_print(exp['left']) + " " +
-                    self._pretty_print(exp['right']))
+            return (cls._pretty_print(exp['left']) + " " +
+                    cls._pretty_print(exp['right']))
         elif exp['type'] == 'lambda':
             return ("(" + "lambda " + exp['binder'] + ". " +
-                    self._pretty_print(exp['body']) + ")")
+                    cls._pretty_print(exp['body']) + ")")
         else:
             raise ValueError("Attempted to print unknown type.")
 
-    def _matched_parens(self, string):
+    @classmethod
+    def _matched_parens(cls, string):
         # Matched parens, this time for a string
         parens = [letter for letter in string if letter in ['(', ')']]
         incr = 0
@@ -270,12 +275,9 @@ class Evaluator(object):
 def main():
     ## Read, Eval, Print Loop (REPL)
     user_input = ""
-    lex = Lexer()
-    par = Parser()
-    eva = Evaluator()
-    l = lex.tokenize
-    p = par.full_parse
-    e = eva.eval
+    l = Lexer.tokenize
+    p = Parser.full_parse
+    e = Evaluator.eval
 
     while True:
         try:
