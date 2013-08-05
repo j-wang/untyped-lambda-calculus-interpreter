@@ -11,21 +11,22 @@ import Test.Framework.Providers.QuickCheck2
 import Test.Framework.Providers.HUnit
 import qualified Test.HUnit as HU
 
-import Interpreter
+import Untyped.Interpreter
 
 main :: IO ()
-main = defaultMain Tests
+main = defaultMain tests
 
 lexerSimpleTest :: HU.Test
 lexerSimpleTest =
-    "Simple test" HU.~: "(lambda x x)" HU.@=? ["(", "lambda", "x", "x", ")"]
+    "Simple test" HU.~: lexer "(lambda x x)" HU.@=? ["(", "lambda", "x", "x", ")"]
 
 lexerNestedTest :: HU.Test
 lexerNestedTest =
-    "Nested test" HU.~: "(lambda x (lambda x y))" HU.@=? ["(", "lambda", "x",
-                                                          "(", "lambda", "x",
-                                                          "y", ")", ")"]
+    "Nested test" HU.~: lexer "(lambda x (lambda x y))" HU.@=? ["(", "lambda", "x",
+                                                                "(", "lambda", "x",
+                                                                "y", ")", ")"]
 
+{--
 lexerEmptyTest :: String -> [String]
 
 
@@ -33,6 +34,8 @@ lexerComplexTest :: String -> [String]
 
 
 parserSimpleTest :: [String] -> Expression
+parserSimpleTest =
+    "Simple parse" HU.~: parser
 
 
 parserEmptyTest :: [String] -> Expression
@@ -49,16 +52,19 @@ reducerEmptyTest =
   "reducer test" HU.~: ___ HU.@=? ___
 
 reducerComplexTest :: Expression -> Expression
-
+--}
 
 tests :: [Test]
 tests =
   [
     testGroup "Lexer"
     [
-      testProperty "Simple test" lexerSimpleTest
+      -- testProperty "Simple test" lexerSimpleTest
+      testGroup "Unit test for lexer (simple)" $ hUnitTestToTests lexerSimpleTest,
+      testGroup "Unit test for lexer (nested)" $ hUnitTestToTests lexerNestedTest
 
     ]
+{--
     testGroup "Parser"
     [
 
@@ -69,4 +75,5 @@ tests =
       testGroup "Unit test for empty" $ hUnitTestToTests reducerEmptyTest
 
     ]
+--}
   ]
